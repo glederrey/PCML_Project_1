@@ -44,3 +44,17 @@ def batch_iter(y, tx, batch_size, num_batches=None, shuffle=True):
         end_index = min((batch_num + 1) * batch_size, data_size)
         if start_index != end_index:
             yield shuffled_y[start_index:end_index], shuffled_tx[start_index:end_index]
+    
+def get_best_model(gradient_losses, gradient_ws):
+    min_loss = gradient_losses[0]
+    best_model = gradient_ws[0]
+    
+    for i in range(len(gradient_losses)-1):
+        if gradient_losses[i+1] < min_loss:
+            min_loss = gradient_losses[i+1]
+            best_model = gradient_ws[i+1]
+            
+    return best_model, min_loss
+    
+    
+

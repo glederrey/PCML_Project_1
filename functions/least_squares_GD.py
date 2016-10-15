@@ -7,6 +7,13 @@ import numpy as np
 from functions.costs import *
 import matplotlib.pyplot as plt
 from IPython import display
+from functions.helpers import *
+
+def least_squares_GD(y, tx, max_iters, gamma):
+    #initial_w = least_squares(y, tx)
+    initial_w = np.ones(len(tx[0]))
+
+    return gradient_descent(y, tx, initial_w, max_iters, gamma, 'MAE')
 
 def compute_gradient(y, tx, w, loss_str):
     """Compute the gradient."""
@@ -45,9 +52,8 @@ def gradient_descent(y, tx, initial_w, max_iters, gamma, loss_str):
         # Compute the gradient and the loss
         loss = compute_cost(y, tx, w, loss_str)
         grad = compute_gradient(y, tx, w, loss_str)
-
+        
         # Update w by gradient
-
         w = w - gamma*grad
 
         # store w and loss
@@ -57,8 +63,9 @@ def gradient_descent(y, tx, initial_w, max_iters, gamma, loss_str):
         #print("Gradient Descent({bi}/{ti}): loss={l}, grad={grad}".format(
         #      bi=n_iter, ti=max_iters - 1, l=loss, grad=np.linalg.norm(grad)))
         plt.semilogy(iterations, losses, '-*b') 
+        plt.title("Loss in function of epochs.\nLast loss = %f"%loss)
         display.display(plt.gcf())        
-        display.clear_output(wait=True)
+        display.clear_output(wait=True)      
               
         if n_iter > 1 and np.abs(losses[-1]-losses[-2]) < 10**-10:
             return losses, ws
