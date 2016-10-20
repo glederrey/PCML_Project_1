@@ -46,3 +46,28 @@ def create_csv_submission(ids, y_pred, name):
         writer.writeheader()
         for r1, r2 in zip(ids, y_pred):
             writer.writerow({'Id':int(r1),'Prediction':int(r2)})
+            
+def prediction(y, tX, w_star):
+
+    pred = np.dot(tX, w_star)
+
+    pred_bin = []
+
+    for i in pred:
+        if i > 0:
+            pred_bin.append(1)
+        else:
+            pred_bin.append(-1)
+            
+    wrong = 0
+    right = 0
+    for i in range(len(y)):
+        if y[i] == pred_bin[i]:
+            right = right + 1
+        else:
+            wrong = wrong + 1
+            
+     
+            
+    print("Good prediction: %i/%i (%f%%)\nWrong prediction: %i/%i (%f%%)"%
+          (right, len(y), 100*right/len(y), wrong,  len(y), 100*wrong/len(y)))         

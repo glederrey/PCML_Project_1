@@ -54,7 +54,6 @@ def get_best_model(gradient_losses, gradient_ws):
             min_loss = gradient_losses[i+1]
             best_model = gradient_ws[i+1]
             
-    return best_model, min_loss
-    
+    return best_model, min_loss 
     
 

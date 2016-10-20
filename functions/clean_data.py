@@ -46,10 +46,10 @@ def delete_column_nan(nan, tX, headers, threshold = 0.65):
             
     return tX, nan, headers
     
-def replace_by_mean(tX, nan):
+def replace_by_mean(tX, nan, max_perc = 1.0):
     """ We replace all the NaN values by the mean of the other values """
     for i in range(len(nan)):
-        if nan[i] > 0:
+        if nan[i] > 0 and nan[i] < max_perc:
             mean = 0
             nbr_val = 0
             for j in range(len(tX)):
@@ -64,16 +64,24 @@ def replace_by_mean(tX, nan):
                     
     return tX
     
-def write_data(output, y, tX, ids, headers):
+def write_data(output, y, tX, ids, headers, type_):
     """Write the data into a CSV file"""
     with open(output, 'w') as csvfile:       
         writer = csv.DictWriter(csvfile, delimiter=",", fieldnames=headers)
         writer.writeheader()
-        for r1, r2, r3 in zip(ids, y, tX):
-            dic = {'Id':int(r1),'Prediction':r2}
-            for i in range(len(r3)):
-                dic[headers[i+2]] = float(r3[i])
-            writer.writerow(dic)
+        if type_ == 'train':
+            for r1, r2, r3 in zip(ids, y, tX):
+                dic = {'Id':int(r1),'Prediction':r2}
+                for i in range(len(r3)):
+                    dic[headers[i+2]] = float(r3[i])
+                writer.writerow(dic)
+        elif type_ == 'test':
+            for r1, r3 in zip(ids, tX):
+                dic = {'Id':int(r1)}
+                for i in range(len(r3)):
+                    dic[headers[i+2]] = float(r3[i])
+                writer.writerow(dic)        
+            
             
             
 def clean_data(data_path, output):
