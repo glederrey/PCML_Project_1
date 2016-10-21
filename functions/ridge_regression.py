@@ -19,7 +19,17 @@ def build_poly(x, degree):
             for k in range(degree+1):
                 mat[i][j*(degree+1)+k] = x[i][j]**k
             
-    return mat    
+    return mat 
+    
+def build_poly_fast(x, degree): 
+    result = np.zeros((x.shape[0],(degree+1)*x.shape[1])) 
+    k = 0
+    for d in range(0, degree+1):
+        for j in range(x.shape[1]):
+           # print (j+k, x[:,j]**d)
+            result[:,j + k] = x[:,j]**d
+        k += len(x[0])
+    return result 
 
 def ridge_regression(y, tx, lamb):
     """implement ridge regression."""

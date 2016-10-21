@@ -13,6 +13,14 @@ def standardize(x, mean_x=None, std_x=None):
     
     tx = np.hstack((np.ones((x.shape[0],1)), x))
     return tx, mean_x, std_x
+    
+def standardize2(x):
+    """Standardize the original data set."""
+    mean_x = np.mean(x)
+    x = x - mean_x
+    std_x = np.std(x)
+    x = x / std_x
+    return x, mean_x, std_x    
 
 
 def batch_iter(y, tx, batch_size, num_batches=None, shuffle=True):
