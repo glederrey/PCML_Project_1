@@ -7,6 +7,19 @@ import numpy as np
 from functions.costs import *
 import matplotlib.pyplot as plt
 from IPython import display
+from matplotlib import cm
+
+def build_poly(x, degree):
+    n_x = len(x)
+    nbr_param = len(x[0])
+    mat = np.zeros((n_x, (degree+1)*nbr_param))
+        
+    for i in range(n_x):
+        for j in range(nbr_param):
+            for k in range(degree+1):
+                mat[i][j*(degree+1)+k] = x[i][j]**k
+            
+    return mat    
 
 def ridge_regression(y, tx, lamb):
     """implement ridge regression."""
@@ -23,41 +36,31 @@ def ridge_regression(y, tx, lamb):
     
     return loss, w_star
     
-def test_ridge_regression(y_train, x_train, y_test, x_test):
-    """ Test the ridge regression and returns all losses and all weights"""
-    lambdas = np.logspace(-10, 10, 200)
-    ws = []
-    losses_train = []
-    losses_test = []
-    lb = []
-
-    plt.title("Loss in function of lambda.")
-    plt.xlabel("Lambda")
-    plt.ylabel("Loss") 
+def cross_validation(y_train, x_train, y_test, x_test, lambdas, degrees):
+    rmse_tr = np.zeros((len(lambdas), len(degrees)))
+    rmse_te = np.zeros((len(lambdas), len(degrees)))    
     
-    first_iter = True
-    
-    for lambda_ in lambdas:
-        loss, w = ridge_regression(y_train, x_train, lambda_)
-        ws.append(w)
-        losses_train.append(loss)
-        lb.append(lambda_)
-        
-        test_loss = compute_cost(y_test, x_test, w, 'RMSE')
-        
-        losses_test.append(test_loss)
-        
-        # Plot the graph of the loss   
-        if first_iter:   
-            plt.loglog(lb, losses_train, '-*b', label='train')
-            plt.loglog(lb, losses_test, '-*r', label='test')
-            plt.legend(loc=3)
-        else:
-            plt.loglog(lb, losses_train, '-*b')
-            plt.loglog(lb, losses_test, '-*r')        
-        plt.title("Loss in function of lambda.\ntrain loss = %f\ntest loss = %s"%(loss, test_loss))         
-        display.display(plt.gcf())        
-        display.clear_output(wait=True)
-        
-        first_iter = False  
+    for ideg, deg in enumerate(degrees):
+        deg = int(deg)
+        tX_train = build_poly(x_train, deg)
+        tX_test = build_poly(x_test, deg)    
+        for ilamb, lamb in enumerate(lambdas):
+            loss, w = ridge_regression(y_train, tX_train, lamb)
+            #print("lambda = %f, degree = %f: rmse_tr = %f"%(lamb, deg, loss))
+            rmse_tr[ilamb, ideg] = loss
+            rmse_te[ilamb, ideg] = compute_cost(y_test, tX_test, w, 'RMSE')
             
+        print("Degree %i/%i done!"%(deg, degrees[-1]))            
+            
+    return rmse_tr, rmse_te
+    
+def find_min(rmse_tr, rmse_te, lambdas, degrees):
+    print("Min for rmse_te: %f"%(np.min(rmse_te)))
+    x, y = np.where(rmse_te == np.min(rmse_te))
+    ilamb_star = x[0]
+    ideg_star = y[0]
+    print("test = %f"%(rmse_te[ilamb_star,ideg_star]))
+    
+    return lambdas[ilamb_star], int(degrees[ideg_star])
+
+
