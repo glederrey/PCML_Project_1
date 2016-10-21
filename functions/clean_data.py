@@ -64,35 +64,48 @@ def replace_by_mean(tX, nan, max_perc = 1.0):
                     
     return tX
     
+def replace_by_median(tX, nan, max_perc = 1.0):
+    """ We replace all the NaN values by the mean of the other values """
+    for i in range(len(nan)):
+        if nan[i] > 0 and nan[i] < max_perc:
+            values = [];
+            for j in range(len(tX)):
+                if tX[j,i] != -999:
+                    values.append(tX[j,i])
+                    
+            median = np.median(values)
+            for j in range(len(tX)):
+                if tX[j,i] == -999:
+                    tX[j,i] = median
+                    
+    return tX    
+    
 def write_data(output, y, tX, ids, headers, type_):
     """Write the data into a CSV file"""
-    with open(output, 'w') as csvfile:       
+    with open(output, 'w') as csvfile:    
         writer = csv.DictWriter(csvfile, delimiter=",", fieldnames=headers)
         writer.writeheader()
         if type_ == 'train':
             for r1, r2, r3 in zip(ids, y, tX):
-                dic = {'Id':int(r1),'Prediction':r2}
+                if r2 == 1:
+                    pred = 's'
+                elif r2 == -1:
+                    pred = 'b'
+                else:
+                    pred = r2
+                dic = {'Id':int(r1),'Prediction':pred}
                 for i in range(len(r3)):
                     dic[headers[i+2]] = float(r3[i])
                 writer.writerow(dic)
         elif type_ == 'test':
             for r1, r3 in zip(ids, tX):
-                dic = {'Id':int(r1)}
+                dic = {'Id':int(r1), 'Prediction': '?'}
                 for i in range(len(r3)):
                     dic[headers[i+2]] = float(r3[i])
                 writer.writerow(dic)        
-            
-            
-            
-def clean_data(data_path, output):
-    """ Clean the data using all the functions in this file """
-    y, tX, ids, headers = load_data(data_path)
-    nan = perc_nan(tX)
-    tX, nan, headers = delete_column_nan(nan, tX, headers, 0.65)
-    tX = replace_by_mean(tX, nan)
-    write_data(output, y, tX, ids, headers)
     
-    
+def remove_values_from_list(the_list, val):
+   return [value for value in the_list if value != val]    
     
         
                           
