@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-"""logistic regression using gradient descent
 """
+Regularized Logistic Regression using Gradient Descent
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from IPython import display
 from functions.least_squares_GD import *
-import time
 
 def sigmoid(t):
     """apply sigmoid function on t."""
@@ -21,22 +22,27 @@ def calculate_gradient(y, tx, w):
     return (np.dot(tx.transpose(),sigmoid(np.dot(tx,w))-y))
 
 
-def learning_by_gradient_descent(y, tx, w, alpha):
+def penalized_logistic_regression(y, tx, w, lambda_):
+    """return the loss, gradient, and hessian."""
+    loss = calculate_loss(y, tx, w) + lambda_*np.linalg.norm(w)**2
+    grad = calculate_gradient(y, tx, w) + 2*lambda_*w
+    return loss, grad
+
+def learning_by_penalized_gradient(y, tx, w, alpha, lambda_):
     """
-        Do one step of gradient descen using logistic regression.
-        Return the loss and the updated w.
+        Do one step of gradient descent, using the penalized logistic regression.
+        Return the loss and updated w.
         """
-    loss = calculate_loss(y,tx,w)
-    grad = calculate_gradient(y,tx,w)
-    w = w-alpha*grad
+    loss, gradient = penalized_logistic_regression(y, tx, w, lambda_)
+    w = w-alpha*gradient
     return loss, w
     
-def logistic_regression(y, tx, gamma, max_iters):
+def regularized_logistic_regression(y, tx, gamma, lambda_, max_iters):
     """
-        Use the logistic regression with Newton method.
+        Use the regularized logistic regression with Gradient Descent method.
     """
     # define initial_w
-    initial_w = np.ones(len(tx[0]))
+    initial_w = np.zeros(len(tx[0]))
 
     # Define parameters to store w and loss
     ws = [initial_w]
@@ -52,7 +58,7 @@ def logistic_regression(y, tx, gamma, max_iters):
     loss_str = 'MSE'
     
     for n_iter in range(max_iters):
-        loss, w = learning_by_gradient_descent(y, tx, w, gamma)
+        loss, w = learning_by_penalized_gradient(y, tx, w, gamma, lambda_)
 
         # store w and loss
         ws.append(w)

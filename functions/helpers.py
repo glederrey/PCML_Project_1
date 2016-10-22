@@ -13,15 +13,6 @@ def standardize(x, mean_x=None, std_x=None):
     
     tx = np.hstack((np.ones((x.shape[0],1)), x))
     return tx, mean_x, std_x
-    
-def standardize2(x):
-    """Standardize the original data set."""
-    mean_x = np.mean(x)
-    x = x - mean_x
-    std_x = np.std(x)
-    x = x / std_x
-    return x, mean_x, std_x    
-
 
 def batch_iter(y, tx, batch_size, num_batches=None, shuffle=True):
     """
@@ -63,5 +54,17 @@ def get_best_model(gradient_losses, gradient_ws):
             best_model = gradient_ws[i+1]
             
     return best_model, min_loss 
+    
+def build_k_indices(y, k_fold, seed):
+    """
+        Build k-indices for the Cross-Validation
+    """
+    num_row = y.shape[0]
+    interval = int(num_row / k_fold)
+    np.random.seed(seed)
+    indices = np.random.permutation(num_row)
+    k_indices = [indices[k * interval: (k + 1) * interval]
+                 for k in range(k_fold)]
+    return np.array(k_indices)
     
 
