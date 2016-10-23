@@ -13,7 +13,7 @@ def sigmoid(t):
 
 
 def calculate_loss(y, tx, w):
-    return (np.sum(1+np.exp(np.dot(tx,w))) -np.dot(y.transpose(),np.dot(tx,w)))
+    return (np.sum(1+np.exp(np.dot(tx,w))) - np.dot(y.transpose(),np.dot(tx,w)))
 
 
 def calculate_gradient(y, tx, w):

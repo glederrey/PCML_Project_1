@@ -32,9 +32,7 @@ def ridge_regression(y, tx, lamb):
     xy = np.dot(np.transpose(tx),y)
     
     w_star = np.linalg.solve(bxx, xy)
-    
-    print(w_star)
-    
+        
     loss = compute_cost(y, tx, w_star, 'RMSE')
     
     return loss, w_star
