@@ -33,8 +33,6 @@ def compute_gradient(y, tx, w, loss_str):
     else:
         raise ValueError("The loss provided \"%s\" does not exist. You have the choice between MSE or MAE"%loss_str)        
         
-        
-
 def gradient_descent(y, tx, initial_w, max_iters, gamma, loss_str):
     """Gradient descent algorithm."""
     # Define parameters to store w and loss

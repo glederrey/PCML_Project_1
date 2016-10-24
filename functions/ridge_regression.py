@@ -8,18 +8,7 @@ from functions.costs import *
 import matplotlib.pyplot as plt
 from IPython import display
 from matplotlib import cm
-from functions.helpers import build_k_indices
-    
-def build_poly(x, degree):
-    n_x = len(x)
-    nbr_param = len(x[0])
-    mat = np.zeros((n_x, (degree+1)*nbr_param))
-        
-    for j in range(nbr_param):
-        for k in range(degree+1):
-            mat[:, j*(degree+1)+k] = x[:,j]**k
-            
-    return mat     
+from functions.helpers import *    
 
 def ridge_regression(y, tx, lamb):
     """implement ridge regression."""
@@ -90,8 +79,7 @@ def calculate_cv(y, tx, k_indices, k, lamb, degree):
     tx_test = tx[k_indices[k]]    
     y_test = y[k_indices[k]]   
     
-    # Get all the indeices that are not in the test data
-    #index_not_k = np.array([i for i in range(len(tx)) if i not in k_indices[k]])
+    # Get all the indices that are not in the test data
     train_indices = []
     for i in range(len(k_indices)):
         if i != k:

@@ -13,6 +13,17 @@ def standardize(x, mean_x=None, std_x=None):
     
     tx = np.hstack((np.ones((x.shape[0],1)), x))
     return tx, mean_x, std_x
+	
+def prepare_log_reg(x, y):
+    """Standardize the original data set.
+    Using feature scaling:
+    X = (X - Xmin) / (Xmax - Xmin)
+    """
+    x  = ((x.T - x.min(1)) / (x.max(1) - x.min(1))).T 
+    tx = np.hstack((np.ones((x.shape[0],1)), x))
+	
+    y[y==-1] = 0
+    return tx, y
 
 def batch_iter(y, tx, batch_size, num_batches=None, shuffle=True):
     """
@@ -67,4 +78,13 @@ def build_k_indices(y, k_fold, seed):
                  for k in range(k_fold)]
     return np.array(k_indices)
     
-
+def build_poly(x, degree):
+    n_x = len(x)
+    nbr_param = len(x[0])
+    mat = np.zeros((n_x, (degree+1)*nbr_param))
+        
+    for j in range(nbr_param):
+        for k in range(degree+1):
+            mat[:, j*(degree+1)+k] = x[:,j]**k
+            
+    return mat 

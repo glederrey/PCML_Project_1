@@ -67,6 +67,26 @@ def prediction(y, tX, w_star):
         else:
             wrong = wrong + 1
             
+def prediction_log(y, tX, w_star):
+
+    pred = np.dot(tX, w_star)
+
+    pred_bin = []
+
+    for i in pred:
+        if i > 0.5:
+            pred_bin.append(1)
+        else:
+            pred_bin.append(0)
+            
+    wrong = 0
+    right = 0
+    for i in range(len(y)):
+        if y[i] == pred_bin[i]:
+            right = right + 1
+        else:
+            wrong = wrong + 1            
+            
      
             
     print("Good prediction: %i/%i (%f%%)\nWrong prediction: %i/%i (%f%%)"%
