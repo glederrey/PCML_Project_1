@@ -41,10 +41,7 @@ def gradient_descent(y, tx, initial_w, max_iters, gamma, loss_str):
     w = initial_w
     iterations = []
     
-    #plt.figure()
-    plt.title("Loss in function of epochs")
-    plt.xlabel("Epochs")
-    plt.ylabel("Loss")
+    last_loss = 0
     
     for n_iter in range(max_iters):
         # Compute the gradient and the loss
@@ -58,14 +55,16 @@ def gradient_descent(y, tx, initial_w, max_iters, gamma, loss_str):
         ws.append(w)
         losses.append(loss)
         iterations.append(n_iter)
-        #print("Gradient Descent({bi}/{ti}): loss={l}, grad={grad}".format(
-        #      bi=n_iter, ti=max_iters - 1, l=loss, grad=np.linalg.norm(grad)))
-        plt.semilogy(iterations, losses, '-*b') 
-        plt.title("Loss in function of epochs.\nLast loss = %f"%loss)
-        display.display(plt.gcf())        
-        display.clear_output(wait=True)      
-              
-        if n_iter > 1 and np.abs(losses[-1]-losses[-2]) < 10**-10:
+        
+        if n_iter % 100 == 0:
+            print("  Iter={it}, loss={ll}, diff={dff}".format(it=n_iter, ll=loss, dff=(loss-last_loss)))
+            last_loss = loss        
+          
+        if n_iter > 1 and np.abs(losses[-1]-losses[-2]) < 10**-8:
+            print("  Iter={it}, loss={ll}, diff={dff}".format(it=n_iter, ll=loss, dff=(loss-last_loss)))     
+
             return losses, ws
+            
+    print("  Iter={it}, loss={ll}, diff={dff}".format(it=n_iter, ll=loss, dff=(loss-last_loss)))     
 
     return losses, ws

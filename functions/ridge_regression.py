@@ -35,69 +35,136 @@ def find_min(rmse_te, lambdas, degrees):
     
     return lambdas[ilamb_star], int(degrees[ideg_star])
     
-def cross_validation(y, tx, lambdas, degrees, k_fold, verb = False, seed = 1):
+def cross_validation(y, tx, deg_lambdas, degrees, k_fold, digits, seed = 1):
     """
         K-fold cross validation for the Ridge Regression
     """
     
+    assert digits>0, 'digits must be at least 1'
+    
     print("Start the %i-fold Cross Validation!"%k_fold)
     
     # Prepare the matrix of rmse
-    rmse_te = np.zeros((len(lambdas), len(degrees)))  
+    rmse_te = np.zeros(len(degrees))
+    lambs_star = np.zeros(len(degrees)) 
     
     # Split data in k-fold  
     k_indices = build_k_indices(y, k_fold, seed)
 
     # Loop on the degrees    
     for ideg, deg in enumerate(degrees):
-        deg = int(deg)   
-        # Loop on the lambdas
-        for ilamb, lamb in enumerate(lambdas):
-            loss_te = []
-            if verb:
-                print("Degree: %i, Lambda: %f; loss = median("%(deg, lamb), end='')
-            # Loop on the k indices
-            for k in range(k_fold):
-                loss = calculate_cv(y, tx, k_indices, k, lamb, deg)
-                loss_te.append(loss)
-                if verb:
-                    if k < k_fold - 1:
-                        print("%f, "%loss, end='')
-                    else:
-                        print("%f) = %f"%(loss, np.median(loss_te)))
-            # We take the median in case of an outlier. 
-            rmse_te[ilamb, ideg] = np.median(loss_te)
-            
-        print("Degree %i/%i done!"%(deg, degrees[-1])) 
+        print("Start degree %i"%(deg))
+        deg = int(deg)
         
-    print("%i-fold Cross Validation finished!"%k_fold)           
+        # Create the matrices
+        mats_train, pred_train, mats_test, pred_test = create_matrices(y, tx, k_indices, deg)
+        
+        # First, we find the best lambdas in the first digit
+        size = 9*len(deg_lambdas)
+        rmse_lmbd = np.zeros(size)
+        lmbd = np.zeros(size)
+        
+        idx = 0
+        # Loop on the degrees of lambdas
+        print("  Start for digit 1")
+        for idlamb, dlamb in enumerate(deg_lambdas):
+            print("    Power of lambda: %i"%dlamb)
+            # loop on the first digit
+            for i in range(1,10):
+                lambda_ = i*(10**int(dlamb))
+                lmbd[idx] = lambda_
+                
+                loss_te = []
+                # Loop on the k indices
+                for k in range(k_fold):
+                    try:
+                        _, w_star = ridge_regression(pred_train[k], mats_train[k], lambda_) 
+                        loss_te.append(compute_cost(pred_test[k], mats_test[k], w_star, 'RMSE'))   
+                    except LinAlgError:
+                        loss_te.appen(inf)
+                
+                rmse_lmbd[idx] = np.median(loss_te)
+                idx += 1
             
-    return rmse_te    
+        for dg in range(2, digits+1):
+            print("  Start for digit %i"%dg)
+            
+            idx_min = np.argmin(rmse_lmbd)
+                        
+            if idx_min == 0:
+               rmse_lmbd = np.zeros(11)
+               lmbd = np.linspace(lmbd[0], lmbd[1], 11) 
+                
+            elif idx_min == len(rmse_lmbd)-1:
+               rmse_lmbd = np.zeros(11)
+               lmbd = np.linspace(lmbd[-2], lmbd[-1], 11)
+            else:
+                rmse_lmbd = np.zeros(21)
+                lmbd = np.linspace(lmbd[idx_min-1], lmbd[idx_min+1], 21)
+         
+            for ilmbd in range(len(lmbd)):
+            
+                loss_te = []
+                # Loop on the k indices
+                for k in range(k_fold):
+                    try:
+                        _, w_star = ridge_regression(pred_train[k], mats_train[k], lmbd[ilmbd]) 
+                        loss_te.append(compute_cost(pred_test[k], mats_test[k], w_star, 'RMSE'))                        
+                    except LinAlgError:
+                        loss_te.appen(inf)
+                
+                rmse_lmbd[ilmbd] = np.median(loss_te)
+        
+        idx_min = np.argmin(rmse_lmbd)
+        print("Finished Degree %i. Best lambda is %10.3e with RMSE %f"%(deg, lmbd[idx_min], rmse_lmbd[idx_min]))
+        rmse_te[ideg] = rmse_lmbd[idx_min]
+        lambs_star[ideg] = lmbd[idx_min]
+            
+        print("--------------------")
+        
+        
+    print("%i-fold Cross Validation finished!\n"%k_fold)    
 
-def calculate_cv(y, tx, k_indices, k, lamb, degree):
-    # Values for the test 
-    tx_test = tx[k_indices[k]]    
-    y_test = y[k_indices[k]]   
-    
-    # Get all the indices that are not in the test data
-    train_indices = []
-    for i in range(len(k_indices)):
-        if i != k:
-            train_indices.append(k_indices[i])
+    idx_min = np.argmin(rmse_te)
+    lambda_star = lambs_star[idx_min]
+    degree_star = degrees[idx_min]
+    min_loss = rmse_te[idx_min]    
             
-    train_indices = np.array(train_indices)
-    train_indices = train_indices.flatten()
-    
-    # Values for the train
-    tx_train = tx[train_indices]
-    y_train = y[train_indices]
-    
-    # Build the polynomials functions
-    tX_train = build_poly(tx_train, degree)
-    tX_test = build_poly(tx_test, degree)  
-    
-    # Apply the Ridge Regression
-    _, w_star = ridge_regression(y_train, tX_train, lamb) 
-    
-    # Return the RMSE on the test data
-    return compute_cost(y_test, tX_test, w_star, 'RMSE')      
+    return min_loss, degree_star, lambda_star   
+
+def create_matrices(y, tx, k_indices, degree):
+    mats_test = []
+    pred_test = []
+    mats_train = []
+    pred_train = []
+    for k in range(len(k_indices)):
+        # Values for the test 
+        tx_test = tx[k_indices[k]]    
+        pred_test.append(y[k_indices[k]]) 
+        
+        # Get all the indices that are not in the test data
+        train_indices = []
+        for i in range(len(k_indices)):
+            if i != k:
+                train_indices.append(k_indices[i])
+                
+        train_indices = np.array(train_indices)
+        train_indices = train_indices.flatten()
+        
+        # Values for the train
+        tx_train = tx[train_indices]
+        pred_train.append(y[train_indices])
+        
+        if degree == 1:
+            tX_train = tx_train
+            tX_test = tx_test
+        else:
+            # Build the polynomials functions
+            tX_train = build_poly(tx_train, degree)
+            tX_test = build_poly(tx_test, degree) 
+
+        mats_test.append(tX_test)
+        mats_train.append(tX_train)
+        
+    return mats_train, pred_train, mats_test, pred_test
+        

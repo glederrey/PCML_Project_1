@@ -67,6 +67,9 @@ def prediction(y, tX, w_star):
         else:
             wrong = wrong + 1
             
+    print("Good prediction: %i/%i (%f%%)\nWrong prediction: %i/%i (%f%%)"%
+          (right, len(y), 100*right/len(y), wrong,  len(y), 100*wrong/len(y)))             
+            
 def prediction_log(y, tX, w_star):
 
     pred = np.dot(tX, w_star)
