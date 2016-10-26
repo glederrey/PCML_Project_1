@@ -79,7 +79,7 @@ def cross_validation(y, tx, deg_lambdas, degrees, k_fold, digits, seed = 1):
                 for k in range(k_fold):
                     try:
                         _, w_star = ridge_regression(pred_train[k], mats_train[k], lambda_) 
-                        loss_te.append(compute_cost(pred_test[k], mats_test[k], w_star, 'RMSE'))   
+                        loss_te.append(perc_wrong_pred(pred_test[k], mats_test[k], w_star))   
                     except LinAlgError:
                         loss_te.appen(inf)
                 
@@ -109,14 +109,14 @@ def cross_validation(y, tx, deg_lambdas, degrees, k_fold, digits, seed = 1):
                 for k in range(k_fold):
                     try:
                         _, w_star = ridge_regression(pred_train[k], mats_train[k], lmbd[ilmbd]) 
-                        loss_te.append(compute_cost(pred_test[k], mats_test[k], w_star, 'RMSE'))                        
+                        loss_te.append(perc_wrong_pred(pred_test[k], mats_test[k], w_star))                        
                     except LinAlgError:
                         loss_te.appen(inf)
                 
                 rmse_lmbd[ilmbd] = np.median(loss_te)
         
         idx_min = np.argmin(rmse_lmbd)
-        print("Finished Degree %i. Best lambda is %10.3e with RMSE %f"%(deg, lmbd[idx_min], rmse_lmbd[idx_min]))
+        print("Finished Degree %i. Best lambda is %10.3e with percentage wrong pred %f"%(deg, lmbd[idx_min], rmse_lmbd[idx_min]))
         rmse_te[ideg] = rmse_lmbd[idx_min]
         lambs_star[ideg] = lmbd[idx_min]
             
