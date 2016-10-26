@@ -35,14 +35,14 @@ def find_min(rmse_te, lambdas, degrees):
     
     return lambdas[ilamb_star], int(degrees[ideg_star])
     
-def cross_validation(y, tx, deg_lambdas, degrees, k_fold, digits, seed = 1):
+def cross_validation(y, tx, deg_lambdas, degrees, k_fold, digits, verbose = True, seed = 1):
     """
         K-fold cross validation for the Ridge Regression
     """
     
     assert digits>0, 'digits must be at least 1'
-    
-    print("Start the %i-fold Cross Validation!"%k_fold)
+    if verbose:
+        print("  Start the %i-fold Cross Validation!"%k_fold)
     
     # Prepare the matrix of rmse
     rmse_te = np.zeros(len(degrees))
@@ -53,7 +53,8 @@ def cross_validation(y, tx, deg_lambdas, degrees, k_fold, digits, seed = 1):
 
     # Loop on the degrees    
     for ideg, deg in enumerate(degrees):
-        print("Start degree %i"%(deg))
+        if verbose:
+            print("  Start degree %i"%(deg))
         deg = int(deg)
         
         # Create the matrices
@@ -66,9 +67,11 @@ def cross_validation(y, tx, deg_lambdas, degrees, k_fold, digits, seed = 1):
         
         idx = 0
         # Loop on the degrees of lambdas
-        print("  Start for digit 1")
+        if verbose:
+            print("  Start for digit 1")
         for idlamb, dlamb in enumerate(deg_lambdas):
-            print("    Power of lambda: %i"%dlamb)
+            if verbose:
+                print("    Power of lambda: %i"%dlamb)
             # loop on the first digit
             for i in range(1,10):
                 lambda_ = i*(10**int(dlamb))
@@ -87,7 +90,8 @@ def cross_validation(y, tx, deg_lambdas, degrees, k_fold, digits, seed = 1):
                 idx += 1
             
         for dg in range(2, digits+1):
-            print("  Start for digit %i"%dg)
+            if verbose:
+                print("    Start for digit %i"%dg)
             
             idx_min = np.argmin(rmse_lmbd)
                         
@@ -116,14 +120,16 @@ def cross_validation(y, tx, deg_lambdas, degrees, k_fold, digits, seed = 1):
                 rmse_lmbd[ilmbd] = np.median(loss_te)
         
         idx_min = np.argmin(rmse_lmbd)
-        print("Finished Degree %i. Best lambda is %10.3e with percentage wrong pred %f"%(deg, lmbd[idx_min], rmse_lmbd[idx_min]))
+        if verbose:
+            print("  Finished Degree %i. Best lambda is %10.3e with percentage wrong pred %f"%(deg, lmbd[idx_min], rmse_lmbd[idx_min]))
         rmse_te[ideg] = rmse_lmbd[idx_min]
         lambs_star[ideg] = lmbd[idx_min]
-            
-        print("--------------------")
         
+        if verbose:
+            print("  --------------------")
         
-    print("%i-fold Cross Validation finished!\n"%k_fold)    
+    if verbose:  
+        print("%  i-fold Cross Validation finished!\n"%k_fold)    
 
     idx_min = np.argmin(rmse_te)
     lambda_star = lambs_star[idx_min]
