@@ -7,12 +7,23 @@ from IPython import display
 
 def sigmoid(t):
     """apply sigmoid function on t."""
-    return 1/(1+np.exp(-t))
+    result = t
+    result[t>60] = 1
+    result[t<-60] = 0
+    result[np.abs(t) < 60] = 1/(1+np.exp(result[np.abs(t) < 60]))
+    
+    return result
 
+def log_exp(t):
+    """apply sigmoid function on t."""
+    result = t
+    result[t<60] = np.log(1+np.exp(result[t<60]))
+    
+    return result
 
 def calculate_loss(y, tx, w):
     """compute the cost by negative log likelihood."""
-    return (np.sum(np.log(1+np.exp(np.dot(tx,w)))) - np.dot(y.transpose(),np.dot(tx,w)))
+    return (np.sum(log_exp(np.dot(tx,w)))) - np.dot(y.transpose(),np.dot(tx,w))
 
 
 def calculate_gradient(y, tx, w):

@@ -83,7 +83,7 @@ def cross_validation(y, tx, deg_lambdas, degrees, k_fold, digits, verbose = True
                     try:
                         _, w_star = ridge_regression(pred_train[k], mats_train[k], lambda_) 
                         loss_te.append(perc_wrong_pred(pred_test[k], mats_test[k], w_star))   
-                    except LinAlgError:
+                    except:
                         loss_te.appen(inf)
                 
                 rmse_lmbd[idx] = np.median(loss_te)
@@ -114,7 +114,7 @@ def cross_validation(y, tx, deg_lambdas, degrees, k_fold, digits, verbose = True
                     try:
                         _, w_star = ridge_regression(pred_train[k], mats_train[k], lmbd[ilmbd]) 
                         loss_te.append(perc_wrong_pred(pred_test[k], mats_test[k], w_star))                        
-                    except LinAlgError:
+                    except:
                         loss_te.appen(inf)
                 
                 rmse_lmbd[ilmbd] = np.median(loss_te)

@@ -14,6 +14,13 @@ def standardize(x, mean_x=None, std_x=None):
     
     tx = np.hstack((np.ones((x.shape[0],1)), x))
     return tx, mean_x, std_x
+    
+def std(x):
+    mean_x = np.mean(x, axis=0)
+    x = x - mean_x
+    std_x = np.std(x, axis=0)
+    x[:, std_x>0] = x[:, std_x>0] / std_x[std_x>0]
+    return x
 	
 def prepare_log_reg(x, y):
     """Standardize the original data set.
@@ -137,8 +144,6 @@ def prediction(y, tX, w_star):
 
     pred = np.dot(tX, w_star)
 
-    pred = np.dot(tX, w_star)
-
     pred[pred>0] = 1
     pred[pred<=0] = -1
     
@@ -151,8 +156,8 @@ def prediction(y, tX, w_star):
 def perc_wrong_pred(y, tX, w_star):
     pred = np.dot(tX, w_star)
 
-    pred[pred>0] = 1
-    pred[pred<=0] = -1
+    pred[pred>=0] = 1
+    pred[pred<0] = -1
     
     right = np.sum(pred == y)
     wrong = len(pred)-right
@@ -161,8 +166,8 @@ def perc_wrong_pred(y, tX, w_star):
             
 def prediction_log(y, tX, w_star):
 
-    pred = np.dot(tX, w_star)
-    pred = np.dot(tX, w_star)
+    pred = sigmoid(np.dot(tX, w_star))
+    print(pred)
 
     pred[pred>0.5] = 1
     pred[pred<=0.5] = 0
@@ -173,3 +178,6 @@ def prediction_log(y, tX, w_star):
     print("Good prediction: %i/%i (%f%%)\nWrong prediction: %i/%i (%f%%)"%
           (right, len(y), 100*right/len(y), wrong,  len(y), 100*wrong/len(y)))         
 
+def sigmoid(t):
+    """apply sigmoid function on t."""
+    return 1/(1+np.exp(-t))
