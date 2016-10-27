@@ -173,4 +173,36 @@ def create_matrices(y, tx, k_indices, degree):
         mats_train.append(tX_train)
         
     return mats_train, pred_train, mats_test, pred_test
+    
+def create_matrices_ct(y, tx, k_indices, degree):
+    mats_test = []
+    pred_test = []
+    mats_train = []
+    pred_train = []
+    for k in range(len(k_indices)):
+        # Values for the test 
+        tx_test = tx[k_indices[k]]    
+        pred_test.append(y[k_indices[k]]) 
+        
+        # Get all the indices that are not in the test data
+        train_indices = []
+        for i in range(len(k_indices)):
+            if i != k:
+                train_indices.append(k_indices[i])
+                
+        train_indices = np.array(train_indices)
+        train_indices = train_indices.flatten()
+        
+        # Values for the train
+        tx_train = tx[train_indices]
+        pred_train.append(y[train_indices])
+        
+        # Build the polynomials functions
+        tX_train = ct_poly(tx_train, degree)
+        tX_test = ct_poly(tx_test, degree)        
+
+        mats_test.append(tX_test)
+        mats_train.append(tX_train)
+        
+    return mats_train, pred_train, mats_test, pred_test    
         

@@ -90,3 +90,4 @@ ENV/
 
 data/*
 output/*.csv
+submission/*.csv

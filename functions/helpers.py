@@ -84,18 +84,7 @@ def build_k_indices(y, k_fold, seed):
     indices = np.random.permutation(num_row)
     k_indices = [indices[k * interval: (k + 1) * interval]
                  for k in range(k_fold)]
-    return np.array(k_indices)
-    
-def build_poly(x, degree):
-    n_x = len(x)
-    nbr_param = len(x[0])
-    mat = np.zeros((n_x, (degree+1)*nbr_param))
-        
-    for j in range(nbr_param):
-        for k in range(degree+1):
-            mat[:, j*(degree+1)+k] = x[:,j]**k
-            
-    return mat 
+    return np.array(k_indices) 
     
 def load_csv_data(data_path, sub_sample=False):
     """Loads data and returns y (class labels), tX (features) and ids (event ids)"""
@@ -156,8 +145,8 @@ def prediction(y, tX, w_star):
 def perc_wrong_pred(y, tX, w_star):
     pred = np.dot(tX, w_star)
 
-    pred[pred>=0] = 1
-    pred[pred<0] = -1
+    pred[pred>0] = 1
+    pred[pred<=0] = -1
     
     right = np.sum(pred == y)
     wrong = len(pred)-right
@@ -181,3 +170,48 @@ def prediction_log(y, tX, w_star):
 def sigmoid(t):
     """apply sigmoid function on t."""
     return 1/(1+np.exp(-t))
+  
+def build_poly(x, degree):
+    n_x = len(x)
+    nbr_param = len(x[0])
+    mat = np.zeros((n_x, (degree+1)*nbr_param))
+        
+    for j in range(nbr_param):
+        for k in range(degree+1):
+            mat[:, j*(degree+1)+k] = x[:,j]**k
+            
+    return mat
+  
+def ct_poly(x, degree):
+    n_x = len(x)
+    
+    nbr_param = len(x[0])    
+    
+    # nbr of cross terms
+    nbr_ct = int(nbr_param*(nbr_param-1)/2)
+
+    if degree > 1:
+        mat = np.zeros((n_x, (degree+1)*nbr_param + nbr_ct))
+            
+        for j in range(nbr_param):
+            for k in range(degree+1):
+                mat[:, j*(degree+1)+k] = x[:,j]**k
+                
+        idx = (degree+1)*nbr_param
+        for l in range(nbr_param):
+            for m in range(l+1, nbr_param):
+                mat[:, idx] = x[:,l]*x[:,m]
+                idx += 1
+                
+    elif degree==1:
+        mat = np.zeros((n_x, nbr_param + nbr_ct))
+        
+        mat[:, :nbr_param] = x
+                
+        idx = nbr_param
+        for l in range(nbr_param):
+            for m in range(l+1, nbr_param):
+                mat[:, idx] = x[:,l]*x[:,m]
+                idx += 1
+                
+    return mat    
