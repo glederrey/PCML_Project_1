@@ -182,7 +182,7 @@ def build_poly(x, degree):
             
     return mat
 
-def build_poly_multi_degree(x, degrees):
+def build_poly_multi_degrees(x, degrees):
     N,nbr_param=np.shape(x)
     if len(degrees) != nbr_param:
         print("ERROR: the size of vector degrees must be equeal of numbere of parameters")
