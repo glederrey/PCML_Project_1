@@ -59,14 +59,25 @@ def calculate_gradient_logit(y, tx, w):
     
 def prepare_logit(x, y):
     """
-        Standardize the original data set. Using the following feature scaling:
-            X = (X - Xmin) / (Xmax - Xmin)
-        The predictions are change such that all the values equal to -1 becomes 0.
+    Standardize the original data set. Using feature scaling:
+                X = (X - Xmin) / (Xmax - Xmin)
+                
+    The predictions of -1 are set to 0.
+                
+    INPUT:
+        x   - Samples matrix
+        y   - Prediction vector
+        
+    OUTPUT:
+        Rescaled version of the Samples matrix and the Prediction vector.
     """
-    x  = ((x.T - x.min(1)) / (x.max(1) - x.min(1))).T 
-    # Add the first column of ones.
+    mean_x = np.mean(x, axis=0)
+    std_x = np.std(x, axis=0)    
+    x = x - mean_x
+    x[:, std_x>0] = x[:, std_x>0] / std_x[std_x>0]
+    # Add the column of ones at the beginnin
     tx = np.hstack((np.ones((x.shape[0],1)), x))
-	
+	# Replace all the -1 by 0
     y[y==-1] = 0
     return tx, y
    
@@ -142,7 +153,7 @@ def prediction_logit(y, tX, w_star):
     pred = np.dot(tX, w_star)
 
     pred[pred>0.5] = 1
-    pred[pred<=0.5] = -1
+    pred[pred<=0.5] = 0
     
     right = np.sum(pred == y)
     wrong = len(pred)-right
@@ -245,29 +256,6 @@ def ct_poly(x, degree):
                 idx += 1
                 
     return mat  
-    
-""" ----------- FUNCTIONS USED FOR THE LOGISTIC REGRESSION ----------- """ 
-
-def prepare_log_reg(x, y):
-    """
-    Standardize the original data set. Using feature scaling:
-                X = (X - Xmin) / (Xmax - Xmin)
-                
-    The predictions of -1 are set to 0.
-                
-    INPUT:
-        x   - Samples matrix
-        y   - Prediction vector
-        
-    OUTPUT:
-        Rescaled version of the Samples matrix and the Prediction vector.
-    """
-    x  = ((x.T - x.min(1)) / (x.max(1) - x.min(1))).T 
-    # Add the column of ones at the beginnin
-    tx = np.hstack((np.ones((x.shape[0],1)), x))
-	# Replace all the -1 by 0
-    y[y==-1] = 0
-    return tx, y
     
 """ ----------- HELPERS FUNCTIONS (Given by the professor) ----------- """
 

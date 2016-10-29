@@ -9,7 +9,7 @@ from helpers import *
 def main():
     print("LOADING THE DATA")
     # Prepare the data
-    y, tX, ids = load_csv_data('train.csv')
+    y, tX, ids = load_csv_data('../../data/train_jet_1_with_mass.csv')
     
     tX, _, _ = standardize(tX)
 
@@ -99,22 +99,22 @@ def test_Logistic_Regression(x_train, y_train, x_test, y_test):
 def test_Reg_Logistic_Regression(x_train, y_train, x_test, y_test):
     
     print("TEST OF THE REGULARIZED LOGISTIC REGRESSION")
-    
+        
     # First thing we need to do is to prepare the data to use them with the logit.
     # For the logit, the predictions are 0 or 1. Therefore, we need to transform the 
     # predictions y. We also transform the values for x such that they all are between 
     # 0 and 1. It helps the logistic regression to work better.
     x_train, y_train = prepare_logit(x_train, y_train)    
-    x_test, y_test = prepare_logit(x_test, y_test)   
+    x_test, y_test = prepare_logit(x_test, y_test)  
 
-    gamma = 1e-6
+    gamma = 1e-4
     max_iters = 2000
-    lambda_ = 2
+    lambda_ = 0.1
     initial_w = np.ones(len(x_train[0]))
    
     w, loss = reg_logistic_regression(y_train, x_train, lambda_, initial_w, max_iters, gamma)
     
-    prediction(y_test, x_test, w)
+    prediction_logit(y_test, x_test, w)
     print("")    
 
 if __name__ == "__main__":
