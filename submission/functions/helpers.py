@@ -36,6 +36,58 @@ def compute_stoch_gradient(y, tx, w, batch_size, max_iter):
         stoch_grad = stoch_grad + compute_gradient(minibatch_y, minibatch_tx, w)
         
     return 1/float(batch_size) * stoch_grad
+    
+""" ----------- FUNCTIONS FOR LOGISTIC REGRESSION ----------- """ 
+def sigmoid(t):
+    """
+        Apply sigmoid function on t. 
+        We used the version 1/(1+exp(-t)) to avoid overflows.
+    """
+    return 1./(1.+np.exp(-t))
+    
+def calculate_loss_logit(y, tx, w):
+    """
+        Compute the cost by negative log likelihood for the Logistic Regression (Logit)
+    """
+    return np.sum(np.log(1+np.exp(np.dot(tx,w)))) - np.dot(y.transpose(),np.dot(tx,w))
+    
+def calculate_gradient_logit(y, tx, w):
+    """
+        Compute the gradient of loss for the Logistic Regression (Logit)
+    """
+    return (np.dot(tx.transpose(),sigmoid(np.dot(tx,w))-y))
+    
+def prepare_logit(x, y):
+    """
+        Standardize the original data set. Using the following feature scaling:
+            X = (X - Xmin) / (Xmax - Xmin)
+        The predictions are change such that all the values equal to -1 becomes 0.
+    """
+    x  = ((x.T - x.min(1)) / (x.max(1) - x.min(1))).T 
+    # Add the first column of ones.
+    tx = np.hstack((np.ones((x.shape[0],1)), x))
+	
+    y[y==-1] = 0
+    return tx, y
+   
+""" ----------- FUNCTIONS FOR REGULARIZED LOGISTIC REGRESSION ----------- """
+   
+def penalized_logistic_regression(y, tx, w, lambda_):
+    """
+        Return the Loss and the gradient of the regularized logistic regression
+    """
+    loss = calculate_loss_logit(y, tx, w) + lambda_*np.linalg.norm(w)**2
+    grad = calculate_gradient_logit(y, tx, w) + 2*lambda_*w
+    return loss, grad
+
+def learning_by_penalized_gradient(y, tx, w, gamma, lambda_):
+    """
+        Do one step of gradient descent, using the penalized logistic regression.
+        Return the loss and updated w.
+        """
+    loss, gradient = penalized_logistic_regression(y, tx, w, lambda_)
+    w = w - gamma*gradient
+    return loss, w
  
 """ ----------- COSTS ----------- """
 
@@ -76,8 +128,28 @@ def prediction(y, tX, w_star):
     right = np.sum(pred == y)
     wrong = len(pred)-right
             
-    print("Good prediction: %i/%i (%f%%)\nWrong prediction: %i/%i (%f%%)"%
-          (right, len(y), 100*right/len(y), wrong,  len(y), 100*wrong/len(y)))
+    print("Good prediction: %i/%i (%.3f%%)\nWrong prediction: %i/%i (%.3f%%)"%
+          (right, len(y), 100.0*float(right)/float(len(y)), 
+          wrong,  len(y), 100.0*float(wrong)/float(len(y))))
+          
+def prediction_logit(y, tX, w_star):
+    """
+        For the Logistic Regression, we need a different function because
+        the predictions are 1 or 0. So, instead of checking if the float value
+        is positive or negative, we need to check if it is bigger or smaller than 0.5
+    """
+
+    pred = np.dot(tX, w_star)
+
+    pred[pred>0.5] = 1
+    pred[pred<=0.5] = -1
+    
+    right = np.sum(pred == y)
+    wrong = len(pred)-right
+            
+    print("Good prediction: %i/%i (%.3f%%)\nWrong prediction: %i/%i (%.3f%%)"%
+          (right, len(y), 100.0*float(right)/float(len(y)), 
+          wrong,  len(y), 100.0*float(wrong)/float(len(y))))
     
 """ ----------- FUNCTIONS FOR CROSS-VALIDATION ----------- """
     
@@ -300,11 +372,10 @@ def get_best_model(gradient_losses, gradient_ws):
             
     return best_model, min_loss 
     
-def split_data(x, y, ratio):
+def split_data(x, y, ratio, seed=1):
     """split the dataset based on the split ratio."""
     
-    #raise NotImplementedError
-    
+    np.random.seed(seed)    
     n = len(x)
     if len(y) != n:
         raise ValueError("Vector x and y have a different size")

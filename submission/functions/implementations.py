@@ -128,3 +128,117 @@ def least_squares(y, tx):
     loss = compute_RMSE(y, tx, w_star)
     
     return w_star, loss
+    
+def ridge_regression(y, tx, lambda_):
+    """
+        Use the Ridge Regression method to find the best weights
+        
+        INPUT:
+            y           - Predictions
+            tx          - Samples
+            
+        OUTPUT:
+            w           - Best weights
+            loss        - Minimum loss
+    """    
+
+    # Compute optimal weights
+    xx = np.dot(np.transpose(tx),tx)
+    # Add the lambda on the diagonal
+    bxx = xx + lambda_*np.identity(len(xx))     
+    xy = np.dot(np.transpose(tx),y)  
+    w_star = np.linalg.solve(bxx, xy)
+        
+    loss = compute_RMSE(y, tx, w_star)
+    
+    return w_star, loss
+    
+def logistic_regression(y, tx, initial_w, max_iters, gamma):
+    """
+        Use the Logistic Regression method to find the best weights
+        
+        INPUT:
+            y           - Predictions
+            tx          - Samples
+            initial_w   - Initial weights
+            max_iters   - Maximum number of iterations
+            gamma       - Step size
+            
+        OUTPUT:
+            w           - Best weights
+            loss        - Minimum loss
+    """
+
+    # Define parameters to store w and loss
+    ws = [initial_w]
+    losses = []
+    w = initial_w
+    iterations = [] 
+       
+    last_loss = 0
+    
+    for n_iter in range(max_iters):
+        # Gradient descent method
+        loss = calculate_loss_logit(y, tx, w)
+        grad = calculate_gradient_logit(y, tx, w)
+        w = w - gamma*grad
+
+        # store w and loss
+        ws.append(w)
+        losses.append(loss)
+        iterations.append(n_iter)
+        if n_iter % 100 == 0:
+            print("Iter={it}, loss={ll}, diff={dff}".format(it=n_iter, ll=loss, dff=(loss-last_loss)))
+            last_loss = loss
+            
+        # Stopping criteria for the convergence
+        if n_iter > 1 and np.abs(losses[-1]-losses[-2]) < 1e-8:
+            break
+
+    print("Iter={it}, loss={ll}, diff={dff}".format(it=n_iter, ll=loss, dff=(loss-last_loss)))     
+    
+    return ws[-1], losses[-1]
+    
+def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
+    """
+        Use the Logistic Regression method to find the best weights
+        
+        INPUT:
+            y           - Predictions
+            tx          - Samples
+            initial_w   - Initial weights
+            max_iters   - Maximum number of iterations
+            gamma       - Step size
+            
+        OUTPUT:
+            w           - Best weights
+            loss        - Minimum loss
+    """
+
+    # Define parameters to store w and loss
+    ws = [initial_w]
+    losses = []
+    w = initial_w
+    iterations = [] 
+       
+    last_loss = 0
+    
+    for n_iter in range(max_iters):
+        # Gradient descent method
+        loss, w = learning_by_penalized_gradient(y, tx, w, gamma, lambda_)
+
+        # store w and loss
+        ws.append(w)
+        losses.append(loss)
+        iterations.append(n_iter)
+        if n_iter % 100 == 0:
+            print("Iter={it}, loss={ll}, diff={dff}".format(it=n_iter, ll=loss, dff=(loss-last_loss)))
+            last_loss = loss
+            
+        # Stopping criteria for the convergence
+        if n_iter > 1 and np.abs(losses[-1]-losses[-2]) < 1e-8:
+            break
+
+    print("Iter={it}, loss={ll}, diff={dff}".format(it=n_iter, ll=loss, dff=(loss-last_loss)))     
+    
+    return ws[-1], losses[-1]
