@@ -203,6 +203,8 @@ def ct_poly(x, degree):
                 mat[:, idx] = x[:,l]*x[:,m]
                 idx += 1
                 
+        return mat
+                
     elif degree==1:
         mat = np.zeros((n_x, nbr_param + nbr_ct))
         
@@ -214,4 +216,57 @@ def ct_poly(x, degree):
                 mat[:, idx] = x[:,l]*x[:,m]
                 idx += 1
                 
-    return mat    
+        return mat   
+
+def ct_poly_triplet(x, degree):
+    n_x = len(x)
+    
+    nbr_param = len(x[0])    
+    
+    # nbr of cross terms                
+    nbr_ct = int(nbr_param*(nbr_param-1)/2 + 
+                2*nbr_param*(nbr_param-1)*(nbr_param-2)/6)
+    
+    if degree > 1:
+        mat = np.zeros((n_x, (degree+1)*nbr_param + nbr_ct))
+            
+        for j in range(nbr_param):
+            for k in range(degree+1):
+                mat[:, j*(degree+1)+k] = x[:,j]**k
+           
+        # First cross terms (pairs)
+        idx = (degree+1)*nbr_param
+        for l in range(nbr_param):
+            for m in range(l+1, nbr_param):
+                mat[:, idx] = x[:,l]*x[:,m]
+                idx += 1
+                
+        # Second cross terms (triplets)
+        for n in range(nbr_param):
+            for o in range(n+1, nbr_param):
+                for p in range(n+2, nbr_param):
+                    mat[:, idx] = x[:,n]*x[:,o]*x[:,p]
+                    idx += 1
+                   
+        return mat
+                
+    elif degree==1:
+        mat = np.zeros((n_x, nbr_param + nbr_ct))
+        
+        mat[:, :nbr_param] = x
+
+        # First cross terms (pairs)        
+        idx = nbr_param
+        for l in range(nbr_param):
+            for m in range(l+1, nbr_param):
+                mat[:, idx] = x[:,l]*x[:,m]
+                idx += 1
+                
+        # Second cross terms (triplets)
+        for n in range(nbr_param):
+            for o in range(m+1, nbr_param):
+                for p in range(m+1, nbr_param):
+                    mat[:, idx] = x[:,n]*x[:,o]*x[:,p]
+                    idx += 1                
+                
+        return mat        
