@@ -150,7 +150,7 @@ def prediction_logit(y, tX, w_star):
         is positive or negative, we need to check if it is bigger or smaller than 0.5
     """
 
-    pred = np.dot(tX, w_star)
+    pred = sigmoid(np.dot(tX, w_star))
 
     pred[pred>0.5] = 1
     pred[pred<=0.5] = 0
