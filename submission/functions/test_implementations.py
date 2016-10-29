@@ -114,7 +114,7 @@ def test_Reg_Logistic_Regression(x_train, y_train, x_test, y_test):
    
     w, loss = reg_logistic_regression(y_train, x_train, lambda_, initial_w, max_iters, gamma)
     
-    prediction(y_test, x_test, w)
+    prediction_logit(y_test, x_test, w)
     print("")    
 
 if __name__ == "__main__":
