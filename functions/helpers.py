@@ -181,7 +181,18 @@ def build_poly(x, degree):
             mat[:, j*(degree+1)+k] = x[:,j]**k
             
     return mat
-  
+
+def build_poly_multi_degree(x, degrees):
+    N,nbr_param=np.shape(x)
+    if len(degrees) != nbr_param:
+        print("ERROR: the size of vector degrees must be equeal of numbere of parameters")
+        return
+    mat = np.ones(N)
+    for i,degree in enumerate(degrees):
+        for d in range(degree+1):
+            mat=np.c_[mat, x[:,i]**d]
+    return mat[:,1:]
+
 def ct_poly(x, degree):
     n_x = len(x)
     
