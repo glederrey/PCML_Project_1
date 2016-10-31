@@ -1,86 +1,45 @@
 # -*- coding: utf-8 -*-
 """
-Regularized Logistic Regression using Gradient Descent
+Ridge Regression
 """
 
 import numpy as np
+from functions.costs import *
 import matplotlib.pyplot as plt
 from IPython import display
-from functions.logistic_regression import *
-from functions.helpers import *
-from functions.costs import *
+from matplotlib import cm
+from functions.helpers import * 
+import itertools   
 
-def penalized_logistic_regression(y, tx, w, lambda_):
-    """return the loss, gradient, and hessian."""
-    loss = calculate_loss(y, tx, w) + lambda_*np.linalg.norm(w)**2
-    grad = calculate_gradient(y, tx, w) + 2*lambda_*w
-    return loss, grad
-
-def learning_by_penalized_gradient(y, tx, w, alpha, lambda_):
-    """
-        Do one step of gradient descent, using the penalized logistic regression.
-        Return the loss and updated w.
-        """
-    loss, gradient = penalized_logistic_regression(y, tx, w, lambda_)
-    w = w-alpha*gradient
-    return loss, w
+def ridge_regression(y, tx, lamb):
+    """implement ridge regression."""
     
-def regularized_logistic_regression(y, tx, gamma, lambda_, max_iters, draw=True, verbose=True):
-    """
-        Use the logistic regression with Gradient Descent method.
-    """
-    # define initial_w
-    initial_w = np.ones(len(tx[0]))
-
-    # Define parameters to store w and loss
-    ws = [initial_w]
-    losses = [np.inf]
-    w = initial_w
-    iterations = []
-    
-    if draw:
-        plt.title("Loss in function of epochs")
-        plt.xlabel("Epochs")
-        plt.ylabel("Loss") 
-    
-    loss_str = 'MSE'
-    
-    last_loss = 0
-    
-    for n_iter in range(max_iters):
-        gma = gamma
-        loss, w = learning_by_penalized_gradient(y, tx, w, gamma, lambda_)
-        while loss > losses[-1] and gma > 1e-10:
-            gma = gma/2
-            loss, w = learning_by_penalized_gradient(y, tx, w, gma, lambda_)
-        # store w and loss
-        ws.append(w)
-        losses.append(loss)
-        iterations.append(n_iter)
-        if draw:
-            plt.semilogy(iterations, losses, '-*b') 
-            plt.title("Loss in function of epochs.\nLast loss = %10.3e"%loss)
-            display.display(plt.gcf())        
-            display.clear_output(wait=True)
-        elif verbose:
-            if n_iter % 100 == 0:
-                print("  Iter={it}, loss={ll}, diff={dff}".format(it=n_iter, ll=loss, dff=(loss-last_loss)))
-                last_loss = loss
-              
-        if n_iter > 1 and np.abs(losses[-1]-losses[-2]) < 1e-8:
-            return losses, ws
-
-    if verbose:
-        print("  Iter={it}, loss={ll}, diff={dff}".format(it=n_iter, ll=loss, dff=(loss-last_loss)))     
+    # Compute optimal weights
+    xx = np.dot(np.transpose(tx),tx)
    
-    return np.array(losses), np.array(ws)
+    bxx = xx + lamb*np.identity(len(xx))
+        
+    xy = np.dot(np.transpose(tx),y)
     
-def cross_validation(y, tx, deg_lambdas, degrees, gamma, max_iter, k_fold, digits, verbose = True, seed = 1):
-    """
-        K-fold cross validation for the Logistic Regression
-    """
+    w_star = np.linalg.solve(bxx, xy)
+            
+    loss = compute_cost(y, tx, w_star, 'RMSE')
     
-    tx, y = prepare_log_reg(tx, y)
+    return loss, w_star
+    
+def find_min(rmse_te, lambdas, degrees):
+    print("Min for rmse_te: %f"%(np.min(rmse_te)))
+    x, y = np.where(rmse_te == np.min(rmse_te))
+    ilamb_star = x[0]
+    ideg_star = y[0]
+    print("test = %f"%(rmse_te[ilamb_star,ideg_star]))
+    
+    return lambdas[ilamb_star], int(degrees[ideg_star])
+    
+def cross_validation(y, tx, deg_lambdas, degrees, k_fold, digits, verbose = True, seed = 1):
+    """
+        K-fold cross validation for the Ridge Regression
+    """
     
     assert digits>0, 'digits must be at least 1'
     if verbose:
@@ -109,11 +68,11 @@ def cross_validation(y, tx, deg_lambdas, degrees, gamma, max_iter, k_fold, digit
         
         idx = 0
         # Loop on the degrees of lambdas
-        if verbose:
-            print("  Start for digit 1")
+        #if verbose:
+        #    print("  Start for digit 1")
         for idlamb, dlamb in enumerate(deg_lambdas):
-            if verbose:
-                print("    Power of lambda: %i"%dlamb)
+            #if verbose:
+            #    print("    Power of lambda: %i"%dlamb)
             # loop on the first digit
             for i in range(1,10):
                 lambda_ = i*(10**int(dlamb))
@@ -122,19 +81,18 @@ def cross_validation(y, tx, deg_lambdas, degrees, gamma, max_iter, k_fold, digit
                 loss_te = []
                 # Loop on the k indices
                 for k in range(k_fold):
-                    #try:
-                    losses, ws = regularized_logistic_regression(pred_train[k], mats_train[k], gamma, lambda_, max_iter, False, False) 
-                    w_star, min_loss = get_best_model(losses, ws)
-                    loss_te.append(calculate_loss(pred_test[k], mats_test[k], w_star))   
-                    #except:
-                        #loss_te.append(np.inf)
+                    try:
+                        _, w_star = ridge_regression(pred_train[k], mats_train[k], lambda_) 
+                        loss_te.append(perc_wrong_pred(pred_test[k], mats_test[k], w_star))   
+                    except:
+                        loss_te.append(np.inf)
                 
                 rmse_lmbd[idx] = np.median(loss_te)
                 idx += 1
             
         for dg in range(2, digits+1):
-            if verbose:
-                print("    Start for digit %i"%dg)
+            #if verbose:
+            #    print("    Start for digit %i"%dg)
             
             idx_min = np.argmin(rmse_lmbd)
                         
@@ -154,10 +112,9 @@ def cross_validation(y, tx, deg_lambdas, degrees, gamma, max_iter, k_fold, digit
                 loss_te = []
                 # Loop on the k indices
                 for k in range(k_fold):
-                    try: 
-                        losses, ws = regularized_logistic_regression(pred_train[k], mats_train[k], gamma, lmbd[ilmbd], max_iter, False, False) 
-                        w_star, min_loss = get_best_model(losses, ws)
-                        loss_te.append(calculate_loss(pred_test[k], mats_test[k], w_star))                         
+                    try:
+                        _, w_star = ridge_regression(pred_train[k], mats_train[k], lmbd[ilmbd]) 
+                        loss_te.append(perc_wrong_pred(pred_test[k], mats_test[k], w_star))                        
                     except:
                         loss_te.append(np.inf)
                 
@@ -210,19 +167,58 @@ def create_matrices(y, tx, k_indices, degree):
             tX_test = tx_test
         else:
             # Build the polynomials functions
-            tX_train = build_poly(tx_train, degree)
-            tX_test = build_poly(tx_test, degree) 
+            tX_train = build_poly_cross_terms(tx_train, degree)
+            tX_test = build_poly_cross_terms(tx_test, degree) 
 
         mats_test.append(tX_test)
         mats_train.append(tX_train)
         
     return mats_train, pred_train, mats_test, pred_test
 
-def find_min(rmse_te, lambdas, degrees):
-    print("Min for rmse_te: %f"%(np.min(rmse_te)))
-    x, y = np.where(rmse_te == np.min(rmse_te))
-    ilamb_star = x[0]
-    ideg_star = y[0]
-    print("test = %f"%(rmse_te[ilamb_star,ideg_star]))
+def remove_features(y, tx, degree_star, lambda_star):
+    N, nbr_param = np.shape(tx)
     
-    return lambdas[ilamb_star], int(degrees[ideg_star])
+    nbr_feature_to_remove = 3
+    
+    print("  We will keep at least %i features on %i features."%(nbr_param - nbr_feature_to_remove, nbr_param))
+    vec_deg = []
+    min_wrong_pred = 1
+    
+    idx = 0
+    tot = 0
+    for i in itertools.product([0,degree_star], repeat=nbr_param):
+        if idx>0:
+            ii = list(i)
+            unique, counts = np.unique(i, return_counts=True)
+            dd = dict(zip(unique, counts))
+            if dd[degree_star] > nbr_param-nbr_feature_to_remove:
+                tot += 1
+        idx += 1
+    
+    print("  Tests are starting... %i to do!"%tot)
+
+    idx = 0
+    done = 0
+    for i in itertools.product([0,degree_star], repeat=nbr_param):
+        if idx>0:
+            ii = list(i)
+            unique, counts = np.unique(i, return_counts=True)
+            dd = dict(zip(unique, counts))
+            if dd[degree_star] > nbr_param-nbr_feature_to_remove:
+                tX = build_poly_multi_degree(tx, list(i))
+                _, w = ridge_regression(y, tX, lambda_star)   
+                wrong_pred = perc_wrong_pred(y, tX, w)
+                if wrong_pred < min_wrong_pred:
+                    min_wrong_pred = wrong_pred
+                    vec_deg = list(i)
+                done += 1
+                if done % 10 == 0:
+                    print("    %i/%i tests done: actual max pred = %f"%(done, tot, (1-min_wrong_pred)))                    
+        idx += 1
+        
+    print("  Max pred = %f (Without feature removing: %f)"%(1-min_wrong_pred, 1-wrong_pred))
+    print("  Vector of Degree* = ", vec_deg)
+    print("\n") 
+        
+    return min_wrong_pred, vec_deg
+    

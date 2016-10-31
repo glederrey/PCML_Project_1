@@ -88,6 +88,5 @@ ENV/
 # Rope project settings
 .ropeproject
 
-data/*
-output/*.csv
-submission/*.csv
+tests/data/*
+tests/output/*.csv
