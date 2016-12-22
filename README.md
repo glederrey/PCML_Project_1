@@ -4,8 +4,10 @@ For the course CS-433 (*Pattern Classification and Machine Learning*) at the EPF
 
 ## Results
 
-On the public leaderboard, we are **4th** with **83.544%** of correct predictions.
-On the private leaderboard, we are **4th** with **83.469%** of correct predictions.
+* Public leaderboard
+  - **4th** with **83.544%** of correct predictions.
+* Private Leadeboar
+  - **4th** *with **83.469%** of correct predictions.
 
 ## Folders
 
